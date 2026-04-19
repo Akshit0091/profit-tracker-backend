@@ -4,6 +4,18 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const { execSync } = require("child_process");
+
+// ─── Auto-run Prisma on startup (for Railway deployment) ──────────────────────
+try {
+  console.log("Running Prisma generate...");
+  execSync("node ./node_modules/prisma/build/index.js generate", { stdio: "inherit" });
+  console.log("Running Prisma db push...");
+  execSync("node ./node_modules/prisma/build/index.js db push --accept-data-loss", { stdio: "inherit" });
+  console.log("✅ Database ready");
+} catch (err) {
+  console.error("Prisma setup error:", err.message);
+}
 
 // Route imports
 const authRoutes = require("./routes/auth");
@@ -23,8 +35,6 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve uploaded files statically (temp storage)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
